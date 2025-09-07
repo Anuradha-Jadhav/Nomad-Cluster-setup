@@ -265,6 +265,21 @@ Web UI Access:
 
 ![Nomad Web UI](https://github.com/user-attachments/assets/4ad89648-16e5-414d-9cf6-8474f2780cce)
 
+Additional Checks
+
+Make sure the nomad user can access Docker:
+
+sudo usermod -aG docker nomad
+sudo systemctl restart nomad
+
+
+Verify the nomad user sees the image:
+
+sudo -u nomad docker images | grep local-nginx
+
+
+Should output local-nginx:latest.
+
 ---
 
 ## Troubleshooting
@@ -278,6 +293,62 @@ Web UI Access:
   ```
 
 ---
+####Job #####
+
+ cat nomadnew.nomad
+
+
+    
+    
+    
+    job "nginx-local" {
+    datacenters = ["dc1"]
+    type        = "service"
+
+    group "nginx" {
+    count = 1
+    network {
+      # Map host port 8080 to container port 80
+      port "http" {
+        static = 8082
+        to     = 80
+      }
+    }
+
+    task "nginx" {
+      driver = "docker"
+
+      config {
+        image      = "local-nginx:nomad"
+        force_pull = false
+        ports      = ["http"]
+      }
+
+      resources {
+        cpu    = 500
+        memory = 256
+      }
+
+      service {
+        name = "nginx"
+        provider = "nomad"
+        port = "http"
+
+        # Health check to ensure Nomad sees the task as healthy
+        check {
+          type     = "tcp"
+          name     = "nginx-tcp-check"
+          port     = "http"
+          interval = "10s"
+          timeout  = "2s"
+        }
+      }
+    }
+  }
+}
+
+[ec2-user@ip-172-31-32-219 ~]$
+
 
 ## References
 
@@ -298,9 +369,27 @@ Web UI Access:
 
 
 
+<img width="1267" height="787" alt="image" src="https://github.com/user-attachments/assets/cf0c14aa-1a03-4928-998d-00ab17189034" />
+
+<img width="926" height="587" alt="image" src="https://github.com/user-attachments/assets/430c0109-420f-452f-9f3e-43027859551e" />
+<img width="1918" height="1027" alt="image" src="https://github.com/user-attachments/assets/9b8a7aa0-5a79-41cc-94ff-d5bdf30a4770" />
+<img width="1918" height="1037" alt="image" src="https://github.com/user-attachments/assets/fdd529ae-ac48-4285-805c-c63915b03faa" />
+<img width="997" height="475" alt="image" src="https://github.com/user-attachments/assets/fee60e25-9182-46d5-9394-8a0a9df874ac" />
+
+
+<img width="1918" height="982" alt="image" src="https://github.com/user-attachments/assets/68c9c35a-3135-4e07-b209-8394ad1afca8" />
+<img width="1918" height="972" alt="image" src="https://github.com/user-attachments/assets/ab04b472-afdd-49aa-99ae-0e9dd5ce7d27" />
+<img width="1917" height="883" alt="image" src="https://github.com/user-attachments/assets/300b0b82-4c31-461f-a0b6-280222caf8a5" />
+
+
+
+
+
+
+
 ---
 
 ```
 
-Do you want me to also **generate a `.md` file download** for you, or just keep it in this text format so you can copy-paste into GitHub?
+
 ```
